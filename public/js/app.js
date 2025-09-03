@@ -17,9 +17,14 @@ function initializeApp() {
     }
 }
 
+
+
 // Autenticación
 function showAuthModal() {
     document.getElementById('navbar').style.display = 'none';
+    // Oculta el sidebar si existe
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.style.display = 'none';
     document.getElementById('content-area').innerHTML = getAuthHTML();
 }
 
@@ -140,33 +145,34 @@ async function handleLogin() {
 }
 
 async function handleRegister() {
-    const fullName = document.getElementById('registerFullName').value;
-    const username = document.getElementById('registerUsername').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
+  const fullName = document.getElementById('registerFullName').value;
+  const username = document.getElementById('registerUsername').value;
+  const email = document.getElementById('registerEmail').value;
+  const password = document.getElementById('registerPassword').value;
 
-    try {
-        const response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ fullName, username, email, password })
-        });
+  try {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ fullName, username, email, password }),
+    });
 
-        const result = await response.json();
+    const result = await response.json();
 
-        if (result.success) {
-            localStorage.setItem('authToken', result.token);
-            currentUser = result.user;
-            initializeMainApp();
-            showNotification('¡Cuenta creada exitosamente!', 'success');
-        } else {
-            showNotification(result.message, 'danger');
-        }
-    } catch (error) {
-        showNotification('Error de conexión', 'danger');
+    if (result.success) {
+      // Registro exitoso: Mostrar mensaje y cambiar a pestaña login
+      showNotification('¡Cuenta creada exitosamente! Ahora inicia sesión.', 'success');
+      // Limpiar formulario registro
+      document.getElementById('registerForm').reset();
+      // Cambiar pestaña a login
+      const loginTabBtn = document.querySelector('[data-bs-target="#loginTab"]');
+      bootstrap.Tab.getInstance(loginTabBtn)?.show() || loginTabBtn.click();
+    } else {
+      showNotification(result.message, 'danger');
     }
+  } catch (error) {
+    showNotification('Error de conexión', 'danger');
+  }
 }
 
 async function validateToken(token) {
@@ -202,6 +208,9 @@ function getUserIdFromToken(token) {
 
 function initializeMainApp() {
     document.getElementById('navbar').style.display = 'block';
+    // Muestra el sidebar si existe
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.style.display = 'block';
     updateNavbar();
     initializeSocket();
     showHome();
